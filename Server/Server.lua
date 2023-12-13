@@ -27,9 +27,6 @@ exports('GetData', function()
     return ROVELT
 end)
 
-
-
-
 Citizen.CreateThread( function()
     updatePath = "/Rovelt123/updatecheck"
     resourceName = "[^2ROVELT SCRIPTS^7] ("..GetCurrentResourceName()..")"
