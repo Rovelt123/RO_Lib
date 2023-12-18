@@ -45,7 +45,7 @@ function ROVELT.Functions.notify(text, variable, time, Framework)
     elseif Framework == "QB" then
         CORE.Functions.Notify(text, variable, time)
     elseif Framework == "RO_Notify" then
-        exports['RO_Notify']:Notify(variable, text, "fa fa-car", time, nil, false)
+        exports['RO_Notify']:Notify(variable, text, nil, time, nil, false)
     elseif Framework == "NONE" then
         print(text)
     end
@@ -53,9 +53,9 @@ end
 
 function ROVELT.Functions.GetID(Framework)
     local CORE = GetCore(Framework)
-    if Config.Framework == "QB" then
+    if Framework == "QB" then
         id = CORE.Functions.GetPlayerData().citizenid
-    elseif Config.Framework == "ESX" then
+    elseif Framework == "ESX" then
         id = CORE.GetPlayerData().identifier
     end
     return id
@@ -116,14 +116,79 @@ function ROVELT.Functions.progressbar(text, time, Framework)
     end
 end
 
-function ROVELT.Functions.OpenMenu(ID, Data, CitizenID, TheMenu, SelectedMenu)
-    print(ID, Data, CitizenID, TheMenu, SelectedMenu)
-    if SelectedMenu == "OX" then 
+function ROVELT.Functions.OpenMenu(TheMenu, Framework)
+    if Framework == "OX" then 
         lib.registerContext(TheMenu)
         Wait(100)
         lib.showContext(TheMenu.id)
-    elseif SelectedMenu == "QB" then
+    elseif Framework == "QB" then
         exports['qb-menu']:openMenu(TheMenu)
+    end
+end
+
+function ROVELT.Functions.InputMenu(header, desc, type, name, text, FrameWork)
+    print(header, desc, type, name, FrameWork)
+    local CORE = GetCore(Framework)
+    local dialog = nil
+    if FrameWork == "QB" then
+        dialog = exports['qb-input']:ShowInput({
+            header = header,
+            submitText = desc,
+            inputs = {
+                {
+                    type = type,
+                    isRequired = true,
+                    name = name,
+                    text = text
+                }
+            }
+        })
+    elseif FrameWork == "ESX" then 
+        local elements = {
+            {label = name, type = type, value = "", isRequired = true}
+        }
+
+        CORE.UI.Menu.Open(
+            'dialog', GetCurrentResourceName(), 'default',
+            {
+                title = header,
+                align = 'top-left',
+                elements = elements
+            },
+            function(data, menu)
+                local result = data.current.value
+                -- Din kode her for at håndtere den indtastede værdi (result)
+                menu.close()
+                dialog = {id = result}
+            end,
+            function(data, menu)
+                menu.close()
+            end
+        )
+    end
+    if dialog then
+        return dialog
+    else
+        return false
+    end
+end
+
+function ROVELT.Functions.GetMoney(type, FrameWork)
+    if FrameWork == "QB" then
+        local CORE = exports["qb-core"]:GetCoreObject()
+        if type == "cash" then
+            return CORE.Functions.GetPlayerData().money.cash
+        elseif type == "bank" then
+            return CORE.Functions.GetPlayerData().money.bank
+        end
+    elseif Framework == "ESX" then
+        local CORE = exports["es_extended"]:getSharedObject()
+        local player = CORE.GetPlayerData()
+        if type == "cash" then
+            return CORE.PlayerData.accounts.Money
+        elseif type == "bank" then
+            return CORE.PlayerData.accounts.Bank
+        end
     end
 end
 
