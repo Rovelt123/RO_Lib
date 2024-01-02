@@ -118,6 +118,7 @@ end
 
 function ROVELT.Functions.OpenMenu(TheMenu, Framework)
     if Framework == "OX" then 
+        print(json.encode(TheMenu))
         lib.registerContext(TheMenu)
         Wait(100)
         lib.showContext(TheMenu.id)
@@ -165,6 +166,14 @@ function ROVELT.Functions.InputMenu(header, desc, type, name, text, FrameWork)
                 menu.close()
             end
         )
+    elseif FrameWork == "OX" then
+        if type == "text" then
+            type = "input"
+        end
+        dialog = lib.inputDialog(header, {
+            {type = type, label = nil, description = text, required = true, min = 1, max = 16},
+
+        })
     end
     if dialog then
         return dialog
