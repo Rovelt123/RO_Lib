@@ -117,8 +117,8 @@ function ROVELT.Functions.progressbar(text, time, Framework)
 end
 
 function ROVELT.Functions.OpenMenu(TheMenu, Framework)
+    local CORE = GetCore(Framework)
     if Framework == "OX" then 
-        print(json.encode(TheMenu))
         lib.registerContext(TheMenu)
         Wait(100)
         lib.showContext(TheMenu.id)
@@ -127,26 +127,29 @@ function ROVELT.Functions.OpenMenu(TheMenu, Framework)
     end
 end
 
-function ROVELT.Functions.InputMenu(header, desc, type, name, text, FrameWork)
-    print(header, desc, type, name, FrameWork)
+function ROVELT.Functions.InputMenu(header, desc, Type, name, text, FrameWork)
     local CORE = GetCore(Framework)
     local dialog = nil
     if FrameWork == "QB" then
-        dialog = exports['qb-input']:ShowInput({
+        TheOld = exports['qb-input']:ShowInput({
             header = header,
             submitText = desc,
             inputs = {
                 {
-                    type = type,
+                    type = Type,
                     isRequired = true,
                     name = name,
                     text = text
                 }
             }
         })
+
+        if TheOld then
+            dialog = TheOld[name]
+        end
     elseif FrameWork == "ESX" then 
         local elements = {
-            {label = name, type = type, value = "", isRequired = true}
+            {label = name, type = Type, value = "", isRequired = true}
         }
 
         CORE.UI.Menu.Open(
@@ -158,7 +161,6 @@ function ROVELT.Functions.InputMenu(header, desc, type, name, text, FrameWork)
             },
             function(data, menu)
                 local result = data.current.value
-                -- Din kode her for at håndtere den indtastede værdi (result)
                 menu.close()
                 dialog = {id = result}
             end,
@@ -167,14 +169,31 @@ function ROVELT.Functions.InputMenu(header, desc, type, name, text, FrameWork)
             end
         )
     elseif FrameWork == "OX" then
-        if type == "text" then
-            type = "input"
+        if Type == "text" then
+            Type = "input"
         end
         dialog = lib.inputDialog(header, {
-            {type = type, label = nil, description = text, required = true, min = 1, max = 16},
+            {type = Type, label = nil, description = text, required = true, min = 1, max = 100000000},
 
         })
     end
+    if dialog then
+        if type(dialog) == "text" then
+            dialog = tostring(dialog)
+        elseif type(dialog) == "string" then
+            dialog = tostring(dialog)
+        elseif type(dialog) == "table" then
+            dialog = tostring(dialog[1])
+        end
+        local numberValue = tonumber(dialog)
+        if numberValue then
+            dialog = numberValue
+        else
+            dialog = tostring(dialog)
+        end
+    end
+
+
     if dialog then
         return dialog
     else
@@ -182,8 +201,8 @@ function ROVELT.Functions.InputMenu(header, desc, type, name, text, FrameWork)
     end
 end
 
-function ROVELT.Functions.GetMoney(type, FrameWork)
-    if FrameWork == "QB" then
+function ROVELT.Functions.GetMoney(type, Framework)
+    if Framework == "QB" then
         local CORE = exports["qb-core"]:GetCoreObject()
         if type == "cash" then
             return CORE.Functions.GetPlayerData().money.cash
@@ -192,14 +211,23 @@ function ROVELT.Functions.GetMoney(type, FrameWork)
         end
     elseif Framework == "ESX" then
         local CORE = exports["es_extended"]:getSharedObject()
-        local player = CORE.GetPlayerData()
+        local Player = CORE.GetPlayerData().accounts
         if type == "cash" then
-            return CORE.PlayerData.accounts.Money
+            for k, v in pairs(Player) do
+                if v.name == "money" then
+                    return v.money
+                end
+            end
         elseif type == "bank" then
-            return CORE.PlayerData.accounts.Bank
+            for k, v in pairs(Player) do
+                if v.name == "bank" then
+                    return v.money
+                end
+            end
         end
     end
 end
+
 
 exports('GetData', function()
     return ROVELT
